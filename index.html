@@ -58,6 +58,10 @@
       max-width: 180px;
     }
 
+    .toggle-btn-pair.three {
+      max-width: 240px;
+    }
+
     .toggle-btn {
       flex: 1;
       padding: 10px 0;
@@ -213,6 +217,35 @@
       font-variant-numeric: tabular-nums;
     }
 
+    /* 品川を通らない電車のグレーアウト */
+    .next-train-card.no-shinagawa {
+      opacity: 0.5;
+      border-color: #333;
+    }
+
+    .next-train-card.no-shinagawa .no-shinagawa-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: #553322;
+      color: #ff9966;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+
+    .upcoming-item.no-shinagawa {
+      opacity: 0.45;
+    }
+
+    .upcoming-item .no-shinagawa-badge {
+      font-size: 0.65rem;
+      background: #553322;
+      color: #ff9966;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+
     .current-time {
       text-align: center;
       padding: 20px 0;
@@ -262,8 +295,9 @@
       <button class="toggle-btn active" id="btn-outbound" onclick="setDirection('outbound')">行き</button>
       <button class="toggle-btn" id="btn-inbound" onclick="setDirection('inbound')">帰り</button>
     </div>
-    <div class="toggle-btn-pair">
+    <div class="toggle-btn-pair three">
       <button class="toggle-btn active" id="btn-weekday" onclick="setDayType('weekday')">平日</button>
+      <button class="toggle-btn" id="btn-saturday" onclick="setDayType('saturday')">土曜</button>
       <button class="toggle-btn" id="btn-holiday" onclick="setDayType('holiday')">休日</button>
     </div>
   </div>
@@ -281,10 +315,12 @@
     let direction = "outbound";
     let dayType = "weekday";
 
-    // 曜日自動判定
+    // 曜日自動判定（0=日, 6=土）
     function autoDetectDayType() {
       const day = new Date().getDay();
-      return (day === 0 || day === 6) ? "holiday" : "weekday";
+      if (day === 6) return "saturday";
+      if (day === 0) return "holiday";
+      return "weekday";
     }
 
     // 初期化時に自動判定
@@ -307,6 +343,7 @@
       document.getElementById("btn-outbound").classList.toggle("active", direction === "outbound");
       document.getElementById("btn-inbound").classList.toggle("active", direction === "inbound");
       document.getElementById("btn-weekday").classList.toggle("active", dayType === "weekday");
+      document.getElementById("btn-saturday").classList.toggle("active", dayType === "saturday");
       document.getElementById("btn-holiday").classList.toggle("active", dayType === "holiday");
     }
 
@@ -390,14 +427,15 @@
 
       const first = trains[0];
       const isUrgent = first.diffSec <= 180; // 3分以内
+      const firstNoShinagawa = first.via_shinagawa === false;
 
       let html = `
-        <div class="next-train-card">
+        <div class="next-train-card${firstNoShinagawa ? " no-shinagawa" : ""}">
           <div class="label">次の電車</div>
           <div class="time-row">
             <span class="departure-time">${first.time}</span>
             <span class="train-type ${getTrainTypeClass(first.type)}">${first.type}</span>
-            <span class="train-dest">${first.dest}行</span>
+            <span class="train-dest">${first.dest}行${firstNoShinagawa ? '<span class="no-shinagawa-badge">品川不可</span>' : ""}</span>
           </div>
           <div class="countdown ${isUrgent ? "urgent" : ""}">${formatCountdown(first.diffSec)}</div>
         </div>
@@ -405,12 +443,13 @@
 
       for (let i = 1; i < trains.length; i++) {
         const t = trains[i];
+        const noShinagawa = t.via_shinagawa === false;
         html += `
-          <div class="upcoming-item">
+          <div class="upcoming-item${noShinagawa ? " no-shinagawa" : ""}">
             <div class="left">
               <span class="dep-time">${t.time}</span>
               <span class="train-type ${getTrainTypeClass(t.type)}">${t.type}</span>
-              <span class="dest">${t.dest}行</span>
+              <span class="dest">${t.dest}行${noShinagawa ? '<span class="no-shinagawa-badge">品川不可</span>' : ""}</span>
             </div>
             <span class="remaining">${formatRemaining(t.diffSec)}</span>
           </div>`;
