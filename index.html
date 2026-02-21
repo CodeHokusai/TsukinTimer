@@ -30,12 +30,12 @@
 
     .header {
       text-align: center;
-      padding: 20px 0 12px;
+      padding: 12px 0 8px;
       width: 100%;
     }
 
     .header h1 {
-      font-size: 1.2rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: #a0c4ff;
       letter-spacing: 0.05em;
@@ -162,10 +162,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 16px;
+      padding: 10px 14px;
       background: #16213e;
       border-radius: 12px;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
 
     .upcoming-item .left {
@@ -384,7 +384,7 @@
             diffMin: Math.max(Math.ceil(diffSec / 60), 0),
           });
         }
-        if (upcoming.length >= 4) break;
+        if (upcoming.length >= 6) break;
       }
       return upcoming;
     }
