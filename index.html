@@ -217,13 +217,13 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* 品川を通らない電車のグレーアウト */
-    .next-train-card.no-shinagawa {
+    /* 利用不可電車のグレーアウト（品川不可 / 新柴又通過） */
+    .next-train-card.unavailable {
       opacity: 0.5;
       border-color: #333;
     }
 
-    .next-train-card.no-shinagawa .no-shinagawa-badge {
+    .next-train-card.unavailable .unavailable-badge {
       display: inline-block;
       font-size: 0.7rem;
       background: #553322;
@@ -233,11 +233,11 @@
       margin-left: 6px;
     }
 
-    .upcoming-item.no-shinagawa {
+    .upcoming-item.unavailable {
       opacity: 0.45;
     }
 
-    .upcoming-item .no-shinagawa-badge {
+    .upcoming-item .unavailable-badge {
       font-size: 0.65rem;
       background: #553322;
       color: #ff9966;
@@ -323,8 +323,16 @@
       return "weekday";
     }
 
+    // 時間帯で行き/帰りを自動判定（16:00〜2:59→帰り、3:00〜15:59→行き）
+    function autoDetectDirection() {
+      const hour = new Date().getHours();
+      if (hour >= 16 || hour < 3) return "inbound";
+      return "outbound";
+    }
+
     // 初期化時に自動判定
     dayType = autoDetectDayType();
+    direction = autoDetectDirection();
     updateToggleUI();
 
     function setDirection(dir) {
@@ -348,7 +356,7 @@
     }
 
     function getTrainTypeClass(type) {
-      if (type === "急行" || type === "快速急行") return "express";
+      if (type === "急行" || type === "快速急行" || type === "快特" || type === "特急" || type === "ア特急" || type === "通勤特急") return "express";
       if (type === "快速" || type === "通勤快速") return "rapid";
       return "local";
     }
@@ -427,15 +435,22 @@
 
       const first = trains[0];
       const isUrgent = first.diffSec <= 180; // 3分以内
-      const firstNoShinagawa = first.via_shinagawa === false;
+
+      // 方向に応じて利用不可判定を切替
+      function isUnavailable(train) {
+        if (direction === "outbound") return train.via_shinagawa === false;
+        return train.stops_shibamata === false;
+      }
+      const badgeText = direction === "outbound" ? "品川不可" : "新柴又通過";
+      const firstUnavail = isUnavailable(first);
 
       let html = `
-        <div class="next-train-card${firstNoShinagawa ? " no-shinagawa" : ""}">
+        <div class="next-train-card${firstUnavail ? " unavailable" : ""}">
           <div class="label">次の電車</div>
           <div class="time-row">
             <span class="departure-time">${first.time}</span>
             <span class="train-type ${getTrainTypeClass(first.type)}">${first.type}</span>
-            <span class="train-dest">${first.dest}行${firstNoShinagawa ? '<span class="no-shinagawa-badge">品川不可</span>' : ""}</span>
+            <span class="train-dest">${first.dest}行${firstUnavail ? `<span class="unavailable-badge">${badgeText}</span>` : ""}</span>
           </div>
           <div class="countdown ${isUrgent ? "urgent" : ""}">${formatCountdown(first.diffSec)}</div>
         </div>
@@ -443,13 +458,13 @@
 
       for (let i = 1; i < trains.length; i++) {
         const t = trains[i];
-        const noShinagawa = t.via_shinagawa === false;
+        const unavail = isUnavailable(t);
         html += `
-          <div class="upcoming-item${noShinagawa ? " no-shinagawa" : ""}">
+          <div class="upcoming-item${unavail ? " unavailable" : ""}">
             <div class="left">
               <span class="dep-time">${t.time}</span>
               <span class="train-type ${getTrainTypeClass(t.type)}">${t.type}</span>
-              <span class="dest">${t.dest}行${noShinagawa ? '<span class="no-shinagawa-badge">品川不可</span>' : ""}</span>
+              <span class="dest">${t.dest}行${unavail ? `<span class="unavailable-badge">${badgeText}</span>` : ""}</span>
             </div>
             <span class="remaining">${formatRemaining(t.diffSec)}</span>
           </div>`;
