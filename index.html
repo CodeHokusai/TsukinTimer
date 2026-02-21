@@ -275,6 +275,18 @@
       margin-bottom: 12px;
     }
 
+    /* 帰り(inbound)オレンジテーマ */
+    body.inbound .header h1 { color: #ffb074; }
+    body.inbound .route-label .station { color: #ffb074; }
+    body.inbound .toggle-btn.active { background: #6b3410; }
+    body.inbound .next-train-card {
+      background: linear-gradient(135deg, #3d2008, #2a1a0e);
+      border-color: #804a1a;
+    }
+    body.inbound .upcoming-item { background: #2a1a0e; }
+    body.inbound .upcoming-item .remaining { color: #ffb074; }
+    body.inbound .upcoming-item .dep-time { color: #f0d0b0; }
+
     /* Safe area for iPhone notch */
     @supports (padding-top: env(safe-area-inset-top)) {
       body {
@@ -348,6 +360,7 @@
     }
 
     function updateToggleUI() {
+      document.body.classList.toggle("inbound", direction === "inbound");
       document.getElementById("btn-outbound").classList.toggle("active", direction === "outbound");
       document.getElementById("btn-inbound").classList.toggle("active", direction === "inbound");
       document.getElementById("btn-weekday").classList.toggle("active", dayType === "weekday");
